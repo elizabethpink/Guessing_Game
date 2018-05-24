@@ -1,0 +1,292 @@
+# Imports
+import pygame
+import os
+import sys
+import random
+
+
+# Global Variables
+fps = 60
+win_w = 500
+win_h = 400
+
+# Colors
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+GRAY = (125, 125, 125)
+PURPLE = (193, 172, 228)
+PINK = (239, 210, 235)
+GREEN = (210, 239, 226)
+BLUE = (50, 15, 250)
+
+# Centered
+os.environ['SDL_VIDEO_CENTERED'] = '1'
+
+
+# Game Class
+class Game:
+    def __init__(self):
+        self.bkgd = pygame.image.load("images/bkgd.png").convert_alpha()
+        self.bkgd = pygame.transform.scale(self.bkgd, (win_w, win_h))
+        self.bkgd_rect = self.bkgd.get_rect()
+        self.board = self.set_board()
+
+    # Blinking Text
+    def blink(self):
+        if pygame.time.get_ticks() % 1000 < 500:
+            return True
+        else:
+            return False
+
+    # Move
+    def update(self):
+        key = pygame.key.get_pressed()
+        if key[pygame.K_LEFT]:
+            self.board_left()
+            # self.board_random()
+        elif key[pygame.K_UP]:
+            self.board_up()
+        # self.board_random()
+        elif key[pygame.K_RIGHT]:
+            self.board_right()
+            # self.board_random()
+        elif key[pygame.K_DOWN]:
+            self.board_down()
+            #    self.board_random()
+
+        self.set_board()
+
+    # Board
+    def set_board(self):
+        board = [
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]]
+        ran1 = random.randrange(0, 2)
+        ran2 = random.randrange(0, 2)
+        board[ran1][ran2] = 2
+
+        ran1 = random.randrange(0, 2)
+        ran2 = random.randrange(0, 2)
+        board[ran1][ran2] = 2
+
+        return board
+
+    # Move Left
+    def board_left(self):
+        for arr in self.board:
+           for i in range(len(arr)):
+               if i > 0:
+                   if arr[i-1] == 0:
+                       arr[i-1] = arr[i]
+                       arr[i] = 2
+
+    # Move Right
+    def board_right(self):
+        for arr in self.board:
+            for i in range(len(arr)):
+                if i < 3:
+                    if arr[i-1] == 2:
+                        arr[i-1] = arr[i]
+                        arr[i] = 2
+
+    # Move Down
+    def board_down(self):
+        for col in self.board:
+            for i in range(len(col)):
+                if i < 3:
+                    if col[i-1] == 2:
+                        col[i-1] = col[i]
+                        col[i] = 2
+
+    # Move Up
+    def board_up(self):
+        for col in self.board:
+            for i in range(len(col)):
+                if i > 0:
+                    if col[i-1] == 0:
+                        col[i-1] = col[i]
+                        col[i] = 2
+
+
+# Text Class
+class Text:
+    def __init__(self, size, text, xpos, ypos, color):
+        self.font = pygame.font.SysFont("Britannic Bold", size)
+        self.image = self.font.render(text, 1, color)
+        self.rect = self.image.get_rect()
+        self.rect = self.rect.move(xpos, ypos)
+
+
+# Tile Class
+class Tile(pygame.sprite.Sprite):
+    def __init__(self, xpos, ypos, t):
+        pygame.sprite.Sprite.__init__(self)
+        self.number = 0
+        self.font = pygame.font.SysFont("Britannic Bold", 125)
+        self.image = self.font.render(str(t), 1, WHITE)
+        self.image = pygame.transform.scale(self.image, (80, 80))
+        self.rect = self.image.get_rect()
+        self.rect = self.rect.move(xpos, ypos)
+        self.speed = 5
+
+    # Move the Tiles
+    def update(self):
+        pass
+        '''
+                if self.rect.left < 0:
+            self.rect.left = 0
+        if self.rect.top < 0:
+            self.rect.top = 0
+        if self.rect.bottom > 260:
+            self.rect.bottom = 260
+        if self.rect.right > 260:
+            self.rect.right = 260
+
+    def collide(self, tile_group):
+        collision = pygame.sprite.spritecollide(self, tile_group, True)
+        for t in collision:
+            pass
+        :return:
+        '''
+        # Stay on Screen
+
+
+# Main
+def main():
+    # Game Basics
+    pygame.init()
+    pygame.display.set_caption("Puzzler")
+    screen = pygame.display.set_mode((win_w, win_h))
+    clock = pygame.time.Clock()
+    play = intro = directions = True
+    outro = False
+    run = Game()
+
+    # Texts
+    title = Text(100, "Puzzler", win_w / 2 - 120, win_h / 4 - 25, PURPLE)
+    title_bottom_line = Text(25, "-------------------------------------------", win_w / 2 - 120, win_h / 2.3 - 34, PINK)
+    byline = Text(20, "By Elizabeth Pink, Ellen Yim, Carlin Liang", win_w / 4, win_h / 2, WHITE)
+    sub = Text(25, "-- Click Here To Continue --", win_w / 2 - 100, win_h / 2 + 100, GREEN)
+    subor = Text(25, "-- OR Press Return -- ", win_w/2 - 70, win_h / 2 + 120, GREEN)
+    direction = Text(100, "Directions", win_w / 2 - 170, win_h / 4 - 25, BLUE)
+    d1 = Text(25, "1) Use the arrows to move the tiles together.", win_w / 4 - 35, win_h / 2 - 45, PURPLE)
+    d2 = Text(25, "2) Combine same number tiles to increase your score.", win_w / 4 - 70, win_h / 2 - 25, PURPLE)
+    d3 = Text(25, "3) The objective is to get to tile 256.", win_w / 4, win_h / 2 - 5, PURPLE)
+    d4 = Text(25, "4) You lose when the board is filled and there are no moves.", win_w / 4 - 110, win_h / 2 + 15,
+              PURPLE)
+    togame = Text(25, "-- Click Here To Continue --", win_w / 2 - 100, win_h / 2 + 120, PINK)
+    score = Text(25, "Score : 0", win_w / 2 + 150, win_h - 30, BLACK)
+    end = Text(100, "Game Over", win_w / 2 - 170, win_h / 4 - 25, PINK)
+    over = Text(25, "Your Score : 0", win_w / 2 + 150, win_h - 30, PINK)
+    again = Text(25, "Click To Play Again or Escape To Exit", win_w / 2 + 150, win_h - 30, PINK)
+
+    # Stuff
+    horizontal = pygame.Surface((1, 260))
+    vertical = pygame.Surface((260, 1))
+
+    # Tiles
+    tile_group = pygame.sprite.Group()
+
+    # Intro
+    while intro:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN or pygame.key.get_pressed()[pygame.K_RETURN] != 0:
+                intro = False
+
+        # Bliting
+        screen.fill(BLACK)
+        screen.blit(title.image, title.rect)
+        screen.blit(title_bottom_line.image, title_bottom_line.rect)
+        screen.blit(byline.image, byline.rect)
+        if run.blink():
+            screen.blit(sub.image, sub.rect)
+            screen.blit(subor.image, subor.rect)
+
+        pygame.display.flip()
+
+    # Directions
+    while directions:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN or pygame.key.get_pressed()[pygame.K_RETURN] != 0:
+                directions = False
+
+        # Bliting
+        screen.fill(BLACK)
+        screen.blit(direction.image, direction.rect)
+        screen.blit(d1.image, d1.rect)
+        screen.blit(d2.image, d2.rect)
+        screen.blit(d3.image, d3.rect)
+        screen.blit(d4.image, d4.rect)
+        if run.blink():
+            screen.blit(togame.image, togame.rect)
+
+        pygame.display.flip()
+
+    # Play
+    while play:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    sys.exit()
+
+        # Updates
+        tile_group.update()
+        run.update()
+
+        # Tiles on Board
+        screen.fill(WHITE)
+        x = y = 0
+        for row in run.board:
+            for t in row:
+                new_tile = Tile(x, y, t)
+                tile_group.add(new_tile)
+                x += 90
+            x = 0
+            y += 90
+
+        # Bliting
+        screen.blit(run.bkgd, run.bkgd_rect)
+        for t in tile_group:
+            screen.blit(t.image, t.rect)
+        screen.blit(score.image, score.rect)
+        screen.blit(vertical, (0, 260))
+        screen.blit(horizontal, (260, 0))
+
+        clock.tick(fps)
+        pygame.display.flip()
+
+    # Game Over
+    while outro:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN or pygame.key.get_pressed()[pygame.K_RETURN] != 0:
+                outro = False
+                main()
+
+        # Bliting
+        screen.fill(BLACK)
+        screen.blit(end.image, end.rect)
+        screen.blit(over.image, over.rect)
+        screen.blit(again.image, again.rect)
+
+        pygame.display.flip()
+
+
+# Run Main
+if __name__ == "__main__":
+    main()
+
+# To Do: 1.combine with same number 2.add new tiles 3.end the game
+# Objective: get to 256 or fill up grid
+# When two tiles are combined the score is incrimented by the combined number
